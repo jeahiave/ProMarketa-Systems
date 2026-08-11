@@ -1,0 +1,29 @@
+name: ProMarketa Systems
+
+on:                         # Dictate WHEN this pipeline runs
+  workflow_dispatch:        # Initiate system on GitHub
+  schedule:                 # Initiate system schedule (daily at midnight)  
+    - cron: '0 0 * * *'
+
+jobs:
+  execute-data-pipeline:    # Boot temporary Linux machine
+    runs-on: ubuntu-latest 
+    steps:                  # Step 1: Load program from system repo to server (temporary)
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+                            # Step 2: Install Python and system dependencies on server
+      - name: Set up Python         
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Data Engineering Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install polars faker
+
+      - name: Execute Extraction (Generate Raw Data) # Step 3: Run the API Extraction
+        run: python generate_data.py
+                            # Step 4: Run Polars data transformation Engine
+      - name: Execute Transformation & Feature Engineering
+        run: python transform_promarketa.py
