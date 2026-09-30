@@ -1,0 +1,24 @@
+[project]
+name = "promarketa-systems"
+version = "0.1.0"
+description = "Automated data engineering and marketing intelligence pipeline"
+authors = [
+    { name = "jeahiave", email = "jeahiave.dev@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "catboost>=1.2.10",
+    "faker>=40.39.0",
+    "lightgbm>=4.7.0",
+    "llvmlite>=0.46.0",
+    "numba>=0.61.0",
+    "numpy>=2.5.3",
+    "polars>=1.44.2",
+    "pyarrow>=25.0.1",
+    "scikit-learn>=1.9.1",
+    "shap>=0.52.0",
+    "xgboost>=3.4.1",
+]
+
+[tool.uv]
+package = false

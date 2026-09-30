@@ -1,32 +1,48 @@
 name: ProMarketa Systems
 
-on:                         # Dictate WHEN this pipeline runs
-  workflow_dispatch:        # Initiate system on GitHub
-  schedule:                 # Initiate system schedule (daily at midnight)  
+on:
+  workflow_dispatch:
+  schedule:
     - cron: '0 0 * * *'
 
 jobs:
-  execute-data-pipeline:    # Boot temporary Linux machine
-    runs-on: ubuntu-latest 
-    steps:                  # Step 1: Load program from system repo to server (temporary)
+  execute-data-pipeline:
+    runs-on: ubuntu-latest
+    steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-                            # Step 2: Install Python and system dependencies on server
-      - name: Set up Python         
-        uses: actions/setup-python@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: '3.11'
+          enable-cache: true
 
-      - name: Install Data Engineering Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r 00_requirements.txt
+      - name: Install Python 3.13
+        run: uv python install 3.13
 
-      - name: Execute Extraction (Generate Raw Data) # Step 3: Run the API Extraction
-        run: python 01_generate_data.py
-                            # Step 4: Run Polars data transformation Engine
+      - name: Install Project Dependencies
+        run: uv sync
+
+      - name: Execute Extraction (Generate Raw Data)
+        run: uv run python 01_generate_data.py
+
       - name: Execute Transformation & Feature Engineering
-        run: python 02_transform_data.py
-                            # Step 5: Run the ML Engine
-      - name: Execute Machine Learning Engine and Explainable AI (XAI) 
-        run: python 03_train_models.py
+        run: uv run python 02_transform_data.py
+
+      - name: Execute Machine Learning Engine and XAI
+        run: uv run python 03_train_models.py
+
+      - name: Setup rclone
+        uses: AnimMouse/setup-rclone@v1
+        with:
+          rclone_config: ${{ secrets.RCLONE_CONFIG }}
+
+      - name: Archive Outputs to Google Drive
+        run: |
+          rclone copy . gdrive:promarketa-archive/ \
+            --include "04_raw_marketing_data.parquet" \
+            --include "05_engineered_marketing_data.parquet" \
+            --include "06_ProMarketa_intel_data.parquet" \
+            --include "07_champion_churn_model.pkl" \
+            --include "08_clv_regressor_model.pkl" \
+            --progress
